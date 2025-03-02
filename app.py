@@ -1,67 +1,47 @@
-from flask import Flask, request, jsonify, render_template
-import openai
-from openai import OpenAI
+from flask import Flask, render_template, request, jsonify
+from flask_socketio import SocketIO
 import speech_recognition as sr
-from gtts import gTTS
-import os
+import base64
 import requests
+from gtts import gTTS
+import io
+from pydub import AudioSegment
+from pydub.utils import which
+
+AudioSegment.converter = which("ffmpeg")
+AudioSegment.ffprobe = which("ffprobe")
 
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Replace with your OpenAI API key
+recognizer = sr.Recognizer()
+
+def decode_audio(audio_data):
+    audio_bytes = base64.b64decode(audio_data.split(',')[1])
+    audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="webm")
+    return audio
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-'''@app.route('/translate', methods=['POST'])
-def translate_text():
-    data = request.json
-    text = data.get('text')
-    target_language = data.get('target_language', 'es')
-
+@socketio.on('audio_chunk')
+def handle_audio_chunk(data):
     try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=f"Translate this to {target_language}: {text}",
-            max_tokens=100
-        )
-        translation = response['choices'][0]['text'].strip()
-        return jsonify({"translation": translation})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-'''
-
-'''@app.route('/translate', methods=['POST'])
-def translate_text():
-    data = request.json
-    text = data.get('text')
-    target_language = data.get('target_language', 'es')
-
-    if not text:
-        return jsonify({"error": "No text provided"}), 400
-
-    try:
-        print(f"Translating: {text} to {target_language}")
-
-        response = client.chat.completions.create(
-            model="gpt-4.5-preview",
-            messages=[
-                {
-                    "role": "user",
-                    "content": "Say this is a test",
-                }
-            ]
-            #prompt=f"Translate this to {target_language}: {text}",
-            #max_tokens=100
-        )
+        file = "static/temp.wav"
+        print("decoading...")
+        audio = decode_audio(data)
+        audio.export(file, format="wav")
+        print("decoaded...")
         
-        translation = response['choices'][0]['text'].strip()
-        return jsonify({"translation": translation})
+        with sr.AudioFile(file) as source:
+            audio_data = recognizer.record(source)
+            text = recognizer.recognize_google(audio_data)
+            
+            socketio.emit('transcription', {'text': text})
+            print(text)
     except Exception as e:
-        print(f"Translation error: {e}")
-        return jsonify({"error": str(e)}), 500
-'''
+        socketio.emit('transcription', {'text': f"Error: {str(e)}"})
 
 @app.route('/translate', methods=['POST'])
 def translate_text():
@@ -79,7 +59,6 @@ def translate_text():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/speak', methods=['POST'])
 def speak_text():
     data = request.json
@@ -92,5 +71,6 @@ def speak_text():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)

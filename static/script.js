@@ -1,4 +1,41 @@
+// static/script.js
+const socket = io.connect('http://localhost:5000');
+
+let mediaRecorder;
+let audioChunks = [];
+
 function startSpeechRecognition() {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        
+        
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        mediaRecorder.ondataavailable = event => {
+            console.log('Audio chunk available:', event.data);
+            if (event.data.size > 0) {
+                const reader = new FileReader();
+                reader.readAsDataURL(event.data);
+                reader.onloadend = () => {
+                    console.log('Sending audio chunk to server...');
+                    socket.emit('audio_chunk', reader.result);
+                };
+            }
+        };
+    
+        mediaRecorder.start(500); // Send chunks every 500ms
+
+        socket.on('transcription', data => {
+            document.getElementById('inputText').value = data.text;
+        });
+    }).catch(err => {
+        console.error('Error accessing microphone:', err);
+    });
+}
+
+/*-----------------------------------------*/
+
+
+
+/*function startSpeechRecognition() {
     const recognition = new webkitSpeechRecognition() || new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.start();
@@ -8,6 +45,7 @@ function startSpeechRecognition() {
         document.getElementById('inputText').value = transcript;
     };
 }
+*/
 
 function translateText() {
     const text = document.getElementById('inputText').value;
