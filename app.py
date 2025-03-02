@@ -9,8 +9,6 @@ import requests
 app = Flask(__name__)
 
 # Replace with your OpenAI API key
-#openai.api_key = "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"
-#client = OpenAI(api_key="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")
 
 @app.route('/')
 def index():
