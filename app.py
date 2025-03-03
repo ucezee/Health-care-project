@@ -14,12 +14,33 @@ AudioSegment.ffprobe = which("ffprobe")
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+audio_buffer = b''
+audio_bytes = b''
 recognizer = sr.Recognizer()
 
-def decode_audio(audio_data):
+"""def decode_audio(audio_data):
     audio_bytes = base64.b64decode(audio_data.split(',')[1])
     audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="webm")
     return audio
+"""
+
+def decode_audio(audio_data):
+    global audio_buffer
+    global audio_bytes
+    try:
+        # Combine audio chunks
+        audio_bytes = base64.b64decode(audio_data.split(',')[1])
+        audio_buffer += audio_bytes
+
+        # Only process if the buffer is large enough
+        if len(audio_buffer) > 4000:  
+            audio = AudioSegment.from_file(io.BytesIO(audio_buffer), format="webm")
+            audio_buffer = b''  # Clear buffer after successful decode
+            audio_bytes = b''
+            return audio
+    except Exception as e:
+        print(f"Audio decoding error: {e}")
+    return None
 
 @app.route('/')
 def index():

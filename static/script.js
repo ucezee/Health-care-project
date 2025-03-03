@@ -4,7 +4,7 @@ const socket = io.connect('http://localhost:5000');
 let mediaRecorder;
 let audioChunks = [];
 
-function startSpeechRecognition() {
+/*function startSpeechRecognition() {
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
         
         
@@ -21,7 +21,9 @@ function startSpeechRecognition() {
             }
         };
     
-        mediaRecorder.start(500); // Send chunks every 500ms
+        mediaRecorder.start(10000); // Send chunks every 500ms
+        
+        
 
         socket.on('transcription', data => {
             document.getElementById('inputText').value = data.text;
@@ -29,23 +31,45 @@ function startSpeechRecognition() {
     }).catch(err => {
         console.error('Error accessing microphone:', err);
     });
-}
+    
+}*/
 
 /*-----------------------------------------*/
 
 
 
-/*function startSpeechRecognition() {
+function startSpeechRecognition() {
     const recognition = new webkitSpeechRecognition() || new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.start();
+    
+
+    var finaltranscript = '';
 
     recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        document.getElementById('inputText').value = transcript;
+        var intertranscript = '';
+        
+        for (var i = event.resultIndex ; i < event.results.length; i++){
+            var transcript = event.results[i][0].transcript;
+            
+            console.log("got here")
+
+            if(event.results[i].isFinal){
+                finaltranscript += transcript
+            }else{
+                intertranscript += transcript
+            }
+            var result = finaltranscript + intertranscript
+            document.getElementById('inputText').innerHTML = result;
+        }
+        
+
     };
 }
-*/
+    
+    
 
 function translateText() {
     const text = document.getElementById('inputText').value;
