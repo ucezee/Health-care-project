@@ -1,11 +1,11 @@
 runtime: python310  
-entrypoint: gunicorn -k eventlet -w 1 app:app  
+entrypoint:  gunicorn -b :$PORT main:app #gunicorn -k eventlet -w 1 app:app  
 
 env_variables:  
   GOOGLE_APPLICATION_CREDENTIALS: "google-credentials.json"  
 
 handlers:  
-- url: /  
+- url: /static  
   static_files: templates/index.html  
   upload: templates/index.html  
 
