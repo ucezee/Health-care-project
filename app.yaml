@@ -1,5 +1,5 @@
 runtime: python310  
-entrypoint:  gunicorn -b :$PORT main:app #gunicorn -k eventlet -w 1 app:app  
+entrypoint:  gunicorn -b :$PORT app:app #gunicorn -k eventlet -w 1 app:app  
 
 env_variables:  
   GOOGLE_APPLICATION_CREDENTIALS: "google-credentials.json"  
