@@ -6,3 +6,4 @@ gTTS
 eventlet  
 google.cloud
 gunicorn
+pydub
