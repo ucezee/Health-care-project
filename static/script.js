@@ -54,15 +54,13 @@ function startSpeechRecognition() {
         for (var i = event.resultIndex ; i < event.results.length; i++){
             var transcript = event.results[i][0].transcript;
             
-            console.log("got here")
-
             if(event.results[i].isFinal){
-                finaltranscript += transcript
+                finaltranscript += transcript + " "
             }else{
                 intertranscript += transcript
             }
-            var result = finaltranscript + intertranscript
-            document.getElementById('inputText').innerHTML = result;
+            //var result = finaltranscript + intertranscript
+            document.getElementById('inputText').innerHTML = finaltranscript + " " + '<span style="color:#999">' + intertranscript + '</span>';
         }
         
 
@@ -72,7 +70,7 @@ function startSpeechRecognition() {
     
 
 function translateText() {
-    const text = document.getElementById('inputText').value;
+    const text = document.getElementById('inputText').innerText;
     const targetLanguage = 'es';  // Example: Spanish
 
     fetch('/translate', {
