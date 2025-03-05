@@ -11,7 +11,7 @@ from pydub.utils import which
 AudioSegment.converter = which("ffmpeg")
 AudioSegment.ffprobe = which("ffprobe")
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates' )
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 audio_buffer = b''
